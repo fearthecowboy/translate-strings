@@ -65,7 +65,7 @@ let translatorModule: language | undefined = undefined;
 export function setLocale(newLocale: string, basePath?: string) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    translatorModule = <language>(require(join(basePath || `${__dirname}/../i18n`, newLocale)).map);
+    translatorModule = <language>(require(join(basePath || `${__dirname}/../i18n`, newLocale.toLowerCase())).map);
   } catch {
     // translation did not load.
     // let's try to trim the locale and see if it fits

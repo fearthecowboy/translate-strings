@@ -199,7 +199,8 @@ async function main() {
     }
 
     // add any requested languages first
-    for (const lang of commandline.addLanguages) {
+    for (const l of commandline.addLanguages) {
+      const lang = l.toLowerCase();
       if (knownLanguages.indexOf(lang) === -1) {
         console.log(`${chalk.redBright('Error')}: language ${chalk.yellowBright(lang)} not supported by Azure Translator. (skipped)`);
         continue;
