@@ -38,7 +38,7 @@ function header() {
   console.log('');
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   console.log(`${chalk.greenBright('Quick And Dirty Tagged Template Translation utility')} [version: ${chalk.white.bold(version())}; node: ${chalk.white.bold(process.version)}; max-memory: ${chalk.white.bold(Math.round((require('v8').getHeapStatistics().heap_size_limit) / (1024 * 1024)) & 0xffffffff00)} gb]`);
-  console.log('https://github.com/FearTheCowboy/TaggedTemplateTranslator');
+  console.log('https://github.com/FearTheCowboy/translate-strings');
   console.log('');
 }
 
