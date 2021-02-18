@@ -24,7 +24,10 @@
     "url": "git+https://github.com/fearthecowboy/translate-strings.git"
   },
   "keywords": [
-    "twisp"
+    "i18n",
+    "tagged template",
+    "localization",
+    "typescript"
   ],
   "author": "Garrett Serack",
   "license": "MIT",
