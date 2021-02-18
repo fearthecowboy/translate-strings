@@ -137,6 +137,14 @@ Any time you want to update/generate your translations, run the tool on the proj
 ./node-modules/.bin/translate-strings .
 ```
 
+You could add `"update-translations": "translate-strings ."` to your npm scripts block, and use `npm run update-translations` anytime. 
+
+When you want to add a new language translation, use `--add-language=` (can specify multiple times)
+
+``` bash
+# add german and italian
+translate-strings /path/to/project --add-language=de --add-language=it
+```
 # Command Line Reference 
 
 The command is: 
