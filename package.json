@@ -1,6 +1,6 @@
 {
   "name": "translate-strings",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "quick-and-dirty translation support",
   "main": "dist/main.js",
   "directories": {

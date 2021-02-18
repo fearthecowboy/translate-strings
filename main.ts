@@ -110,7 +110,9 @@ async function main() {
       return undefined;
     });
     if (!found) {
-      fail(`Unable to find the translator function. \nYou must have a translator function with a ${chalk.blueBright('@translator')} jsdoc tag. (See docs)`);
+      console.log(`${chalk.yellowBright('WARNING')}: Unable to find the translator function. `);
+      console.log('Assuming all i`...` strings are translator calls. ');
+      console.log(`If this doesn't work, and you want to use the correct one, you need to have a translator function with a ${chalk.blueBright('@translator')} jsdoc tag. (See docs)`);
     }
 
     const strings: Dictionary<templateStringInfo> = {};
@@ -138,7 +140,7 @@ async function main() {
             const decl = tagSymbol?.getDeclarations()[0];
             if (Node.isFunctionDeclaration(decl)) {
               const sourceFile = decl?.getSourceFile();
-              if (decl.getName() === iFn && sourceFile === i18nSourceFile) {
+              if (decl.getName() === iFn && (i18nSourceFile ? sourceFile === i18nSourceFile : true)) {
 
                 // we have found a tagged template literal, and it's one of ours.
                 // let's start gathering the data for it.
@@ -208,9 +210,8 @@ async function main() {
         continue;
       }
       // don't remake files that are already there
-      const sf = project.createSourceFile(path, `import { Dictionary } from '../lib/linq';
-
-export const map: Dictionary<(...args: Array<any>) => string> = {
+      const sf = project.createSourceFile(path, `interface language { [key: string]: (...args: Array<any>) => string; }
+export const map: language = {
 };
 `);
       translationFiles.push(sf);
@@ -294,7 +295,7 @@ export const map: Dictionary<(...args: Array<any>) => string> = {
                 name,
                 kind: StructureKind.PropertyAssignment,
                 initializer: `(${pp.join(',')}) => {
-              // autotranslated using Azure Translator (${text})
+              // autotranslated using Azure Translator via 'translate-strings' tool (${text})
               return ${translation};
             }`
               });

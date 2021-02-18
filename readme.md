@@ -52,6 +52,7 @@ You need to add the following code to your project:
 > i18n.ts 
 ``` typescript
 /** what a language map looks like. */
+import { join } from 'path';
 interface language {
   [key: string]: (...args: Array<any>) => string;
 }
@@ -60,12 +61,17 @@ type PrimitiveValue = string | number | boolean | undefined | Date;
 
 let translatorModule: language | undefined = undefined;
 
-export function setLocale(newLocale: string) {
+export function setLocale(newLocale: string, basePath?: string) {
   try {
-    // this line assumes the translations are in ./i18n/* folder
-    translatorModule = <language>(require(`./i18n/${newLocale}`).map);
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    translatorModule = <language>(require(join(basePath || `${__dirname}/../i18n`, newLocale)).map);
   } catch {
     // translation did not load.
+    // let's try to trim the locale and see if it fits
+    const l = newLocale.lastIndexOf('-');
+    if (l > -1) {
+      setLocale(newLocale.substr(0, l), basePath);
+    }
     // fallback to no translation
     translatorModule = undefined;
   }
@@ -94,7 +100,6 @@ function normalize(literals: TemplateStringsArray, values: Array<PrimitiveValue>
  * @param literals the literal values in the tagged template
  * @param values the inserted values in the template
  *
- * The following tag is needed to identify the translator function for the tool:
  * @translator
  */
 export function i(literals: TemplateStringsArray, ...values: Array<string | number | boolean | undefined | Date>) {
@@ -106,6 +111,7 @@ export function i(literals: TemplateStringsArray, ...values: Array<string | numb
   const fn = translatorModule[normalize(literals, values)];
   return fn ? fn(...values) : normalize(literals, values, (content) => `${content}`);
 }
+
 ```
 
 Then, in all your source files where you need translations, import the translator function
