@@ -67,6 +67,11 @@ async function isDirectory(target: string) {
   }
   return false;
 }
+let knownLanguages = new Array<string>();
+
+function getLanguageCode(lang: string) {
+  return knownLanguages.find(each => each.toLowerCase() === lang.toLowerCase());
+}
 
 async function main() {
   const commandline = parseArgs(args);
@@ -78,7 +83,7 @@ async function main() {
 
     // get the list of languages from Azure Translator
     const languageData = JSON.parse(await get('https://api.cognitive.microsofttranslator.com/languages?api-version=3.0'));
-    const knownLanguages = Object.keys(languageData.translation);
+    knownLanguages = Object.keys(languageData.translation);
 
     const root = commandline.folder;
     strict.ok(await isDirectory(root), `${root} should be a project folder`);
@@ -201,7 +206,7 @@ async function main() {
     // add any requested languages first
     for (const l of commandline.addLanguages) {
       const lang = l.toLowerCase();
-      if (knownLanguages.indexOf(lang) === -1) {
+      if (!getLanguageCode(lang)) {
         console.log(`${chalk.redBright('Error')}: language ${chalk.yellowBright(lang)} not supported by Azure Translator. (skipped)`);
         continue;
       }
@@ -221,7 +226,8 @@ export const map: language = {
     // let's make sure there are entries in all of the language translations
     for (const lang of translationFiles) {
       // get the language name from the source file name
-      const language = basename(lang.getFilePath()).replace(/\.ts$/, '');
+      const l = basename(lang.getFilePath()).replace(/\.ts$/, '');
+      const language = getLanguageCode(l) || l;
 
       let isModified = false;
 
