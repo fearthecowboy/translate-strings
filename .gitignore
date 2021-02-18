@@ -364,3 +364,6 @@ common/config/rush/pnpm-lock.yaml
 /test/**/*.d.ts
 /test/**/*.map
 /test/**/*.js
+
+*.tgz
+package-lock.json

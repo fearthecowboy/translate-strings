@@ -127,14 +127,14 @@ console.log( i`it was ${weight} kilograms` )
 Any time you want to update/generate your translations, run the tool on the project: 
 
 ``` bash
-./node-modules/.bin/translate-templates .
+./node-modules/.bin/translate-strings .
 ```
 
 # Command Line Reference 
 
 The command is: 
 
-`translate-templates <project folder> <switches>`
+`translate-strings <project folder> <switches>`
 
 possible switches
 

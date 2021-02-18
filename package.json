@@ -1,6 +1,6 @@
 {
-  "name": "translate-templates",
-  "version": "1.0.3",
+  "name": "translate-strings",
+  "version": "1.0.0",
   "description": "quick-and-dirty translation support",
   "main": "dist/main.js",
   "directories": {
@@ -21,18 +21,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Microsoft/twisp.git"
+    "url": "git+https://github.com/fearthecowboy/translate-strings.git"
   },
   "keywords": [
     "twisp"
   ],
-  "author": "Microsoft",
+  "author": "Garrett Serack",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Microsoft/twisp/issues"
+    "url": "https://github.com/fearthecowboy/ttranslate-strings/issues"
   },
-  "homepage": "https://github.com/Microsoft/twisp#readme",
-  "readme": "https://github.com/Microsoft/twisp/blob/master/readme.md",
+  "homepage": "https://github.com/fearthecowboy/translate-strings#readme",
+  "readme": "https://github.com/fearthecowboy/translate-strings/blob/master/readme.md",
   "devDependencies": {
     "@types/node": "~14.14.22",
     "@typescript-eslint/eslint-plugin": "~4.14.1",
