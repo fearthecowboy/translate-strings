@@ -51,8 +51,9 @@ You need to add the following code to your project:
 
 > i18n.ts 
 ``` typescript
-/** what a language map looks like. */
 import { join } from 'path';
+
+/** what a language map looks like. */
 interface language {
   [key: string]: (...args: Array<any>) => string;
 }
