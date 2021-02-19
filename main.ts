@@ -68,31 +68,39 @@ async function isDirectory(target: string) {
   return false;
 }
 let knownLanguages = new Array<string>();
+let languageData: any = {};
+let azure: TranslatorTextClient;
 
 function getLanguageCode(lang: string) {
   return knownLanguages.find(each => each.toLowerCase() === lang.toLowerCase());
 }
 
+async function prep() {
+  // get the list of languages from Azure Translator
+  languageData = JSON.parse(await get('https://api.cognitive.microsofttranslator.com/languages?api-version=3.0'));
+  knownLanguages = Object.keys(languageData.translation);
+  const key = commandline.switch('key', '--key specified more than once') || process.env['translator_key'] || fail('Missing Azure Translator key (--key= or environment variable \'translator_key\').\nYou can get access to Azure Translator at https://azure.microsoft.com/en-us/pricing/details/cognitive-services/translator/ \n(it\'s free for < 2 million characters translated per month.)');
+  azure = new TranslatorTextClient(new CognitiveServicesCredentials(key), 'https://api.cognitive.microsofttranslator.com/');
+
+}
+
+const commandline = parseArgs(args);
+
 async function main() {
-  const commandline = parseArgs(args);
   header();
 
   try {
-
-    const key = commandline.switch('key', '--key specified more than once') || process.env['translator_key'] || fail('Missing Azure Translator key (--key= or environment variable \'translator_key\').\nYou can get access to Azure Translator at https://azure.microsoft.com/en-us/pricing/details/cognitive-services/translator/ \n(it\'s free for < 2 million characters translated per month.)');
-
-    // get the list of languages from Azure Translator
-    const languageData = JSON.parse(await get('https://api.cognitive.microsofttranslator.com/languages?api-version=3.0'));
-    knownLanguages = Object.keys(languageData.translation);
+    if (!commandline.noTranslate) {
+      // if we're translating, we need the language data
+      await prep();
+    }
 
     const root = commandline.folder;
     strict.ok(await isDirectory(root), `${root} should be a project folder`);
 
     let updatedFiles = 0;
 
-    const azure = new TranslatorTextClient(new CognitiveServicesCredentials(key), 'https://api.cognitive.microsofttranslator.com/');
     const translationFilesFolder = commandline.output || join(root, 'i18n');
-
     const project = new Project({ tsConfigFilePath: join(root, 'tsconfig.json') });
     const translationFiles = project.getSourceFiles().filter(each => normalize(each.getFilePath()).startsWith(translationFilesFolder));
     const sourceFiles = project.getSourceFiles().filter(each => !normalize(each.getFilePath()).startsWith(translationFilesFolder));
@@ -206,9 +214,12 @@ async function main() {
     // add any requested languages first
     for (const l of commandline.addLanguages) {
       const lang = l.toLowerCase();
-      if (!getLanguageCode(lang)) {
-        console.log(`${chalk.redBright('Error')}: language ${chalk.yellowBright(lang)} not supported by Azure Translator. (skipped)`);
-        continue;
+      if (azure) {
+        // if we're translating, check the language, otherwise don't bother.
+        if (!getLanguageCode(lang)) {
+          console.log(`${chalk.redBright('Error')}: language ${chalk.yellowBright(lang)} not supported by Azure Translator. (skipped)`);
+          continue;
+        }
       }
       const path = join(translationFilesFolder, `${lang}.ts`);
       if (project.getSourceFile(path)) {
@@ -253,56 +264,64 @@ export const map: language = {
             const fn = strings[key];
             const name = singleQuote(key);
 
+
             if (props[name] === undefined) {
               // missing a string! let's add it.
+
 
               const pp = fn.params.map(each => `${each.name}: ${each.type}`);
               const text = pp.length === 0 ? name : fn.literal;
               let translation = '';
-              try {
-                const placeholders = new Array<string>();
-                let i = 0;
+              let comment = '';
+              if (azure) { // if we're translating, we'll have an azure client.
+                try {
+                  const placeholders = new Array<string>();
+                  let i = 0;
 
-                // whackety-whack, this is a hack.
-                // numbers seem to make it thru translation without
-                // too much trouble, so let's stick in a weird number
-                // for each parameter so we can put the parameter name
-                // back at the end.
-                const t = text.replace(/(\$\{.*?\})/g, (item) => {
-                  placeholders[i] = item;
-                  // insert a number that's not likely to be there
-                  return `77${i++}77`;
-                });
-
-                // Azure, please translate this for me
-                const result = await azure.translator.translate([language], [{ text: t }]);
-                translation = result[0]?.translations?.[0].text || text;
-
-                // if we had whackety-whack parameters, let's fix them back up
-                if (i > 0) {
-                  translation = translation.replace(/77(.*?)77/g, (item, value, pos, string) => {
-                    // return the original template to the string
-                    return placeholders[Number.parseInt(value)];
+                  // whackety-whack, this is a hack.
+                  // numbers seem to make it thru translation without
+                  // too much trouble, so let's stick in a weird number
+                  // for each parameter so we can put the parameter name
+                  // back at the end.
+                  const t = text.replace(/(\$\{.*?\})/g, (item) => {
+                    placeholders[i] = item;
+                    // insert a number that's not likely to be there
+                    return `77${i++}77`;
                   });
-                  // backtick quote it (parameterized strings are templates in the translation.)
-                  translation = '`' + translation.substr(1, translation.length - 2) + '`';
-                } else {
-                  // single quote it (non-parameterized strings are just single quoted strings)
-                  translation = singleQuote(translation.substr(1, translation.length - 2));
+
+                  // Azure, please translate this for me
+                  const result = await azure.translator.translate([language], [{ text: t }]);
+                  translation = result[0]?.translations?.[0].text || text;
+
+                  // if we had whackety-whack parameters, let's fix them back up
+                  if (i > 0) {
+                    translation = translation.replace(/77(.*?)77/g, (item, value, pos, string) => {
+                      // return the original template to the string
+                      return placeholders[Number.parseInt(value)];
+                    });
+                    // backtick quote it (parameterized strings are templates in the translation.)
+                    translation = '`' + translation.substr(1, translation.length - 2) + '`';
+                  } else {
+                    // single quote it (non-parameterized strings are just single quoted strings)
+                    translation = singleQuote(translation.substr(1, translation.length - 2));
+                  }
+                  comment = `// autotranslated using Azure Translator via 'translate-strings' tool (${text})`;
+                } catch (e) {
+                  //
+                  // console.log(e);
                 }
-              } catch (e) {
-                //
-                // console.log(e);
               }
               if (!translation) {
+                // if we failed to translate (or we're not translating, use the input text)
                 translation = text;
+                comment = `// todo: translate this string (${text})`;
               }
               // Now we can create the property assignment for that string
               initializer.addProperty(<PropertyAssignmentStructure>{
                 name,
                 kind: StructureKind.PropertyAssignment,
                 initializer: `(${pp.join(',')}) => {
-              // autotranslated using Azure Translator via 'translate-strings' tool (${text})
+              ${comment}
               return ${translation};
             }`
               });

@@ -158,6 +158,8 @@ possible switches
 | `--key=<####>` | specify the Azure Translate key on the command line. Or use and environment variable `translator_key` | 
 | `--output=<folder>` | specify the folder where the translation files are generated. defaults to `<project-folder>/i18n/`
 | `--add-language=<code>` | add a new translation file for the language with the given code. | 
+| `--no-translate` | Skips doing translation, but will fill in language files with todo notes instead |
+
 
 ### Current language codes:
 
