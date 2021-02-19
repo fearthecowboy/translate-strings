@@ -3,6 +3,8 @@
 This tool enables you to add i18n/translations to your TypeScript application without having to 
 rely on *any* third party libraries. 
 
+> **New!**: If you don't want to use automatic translation use `--no-translate` and it will not use the Azure Translator service and you won't have to sign up for an account. You can manually update the translations. 
+
 ## How Does It Work?
 
 By using [tagged templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals#tagged_templates) (ie ``console.log(i`Two plus five is: ${2+5}`)``) you can mark your strings that you want to support translation for.
